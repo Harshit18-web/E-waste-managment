@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Waste Marketplace</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0GkMU9vnmjhR-lyzPZnNqKXtTrQQ9n7c",
+            authDomain: "e-waste-marketplace-ace56.firebaseapp.com",
+            projectId: "e-waste-marketplace-ace56",
+            storageBucket: "e-waste-marketplace-ace56.appspot.com",
+            messagingSenderId: "806602257996",
+            appId: "1:806602257996:web:1e8a37997c9962926126e9",
+            measurementId: "G-RPBRPBKTQ7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+         
+        window.signup = function(event) {
+            event.preventDefault();
+            const email = document.getElementById("signupEmail").value;
+            const password = document.getElementById("signupPassword").value;
+            createUserWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    alert("Signup successful! Please login.");
+                    document.getElementById("signupPage").style.display = "none";
+                    document.getElementById("authPage").style.display = "block";
+                })
+                .catch(error => {
+                    alert("Signup failed: " + error.message);
+                });
+        };
+
+        window.login = function(event) {
+            event.preventDefault();
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    document.getElementById("authPage").style.display = "none";
+                    document.getElementById("homePage").style.display = "block";
+                })
+                .catch(error => {
+                    alert("Login failed: " + error.message);
+                });
+        };
+
+        window.showSellPage = function() {
+            document.getElementById("homePage").style.display = "none";
+            document.getElementById("sellPage").style.display = "block";
+        };
+
+        window.showListingsPage = async function() {
+            document.getElementById("homePage").style.display = "none";
+            document.getElementById("listingsPage").style.display = "block";
+            const listingsContainer = document.getElementById("listings");
+            listingsContainer.innerHTML = "";
+            const querySnapshot = await getDocs(collection(db, "listings"));
+            querySnapshot.forEach((doc) => {
+                const listing = doc.data();
+                const div = document.createElement("div");
+                div.classList.add("listings-container");
+                div.innerHTML = `<p><strong>Name:</strong> ${listing.name} <br>
+                                 <strong>Email:</strong> ${listing.email} <br>
+                                 <strong>Product:</strong> ${listing.product} <br>
+                                 <strong>Age:</strong> ${listing.age} years <br>
+                                 <strong>Brand:</strong> ${listing.brand} <br>
+                                 <strong>Model:</strong> ${listing.model}<br>
+                                 <strong>Phone:</strong> ${listing.phone}</p><hr>`;
+                listingsContainer.appendChild(div);
+            });
+        };
+
+        window.sellProduct = async function(event) {
+            event.preventDefault();
+            const name = document.getElementById("sellerName").value;
+            const email = document.getElementById("sellerEmail").value;
+            const product = document.getElementById("product").value;
+            const age = document.getElementById("age").value;
+            const brand = document.getElementById("brand").value;
+            const model = document.getElementById("model").value;
+            const phone = document.getElementById("phone").value;
+            await addDoc(collection(db, "listings"), { name, email, product, age, brand, model, phone });
+            alert("Listing added successfully!");
+            goBack();
+        };
+
+        window.goBack = function() {
+            document.getElementById("homePage").style.display = "block";
+            document.getElementById("sellPage").style.display = "none";
+            document.getElementById("listingsPage").style.display = "none";
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #2c3e50, #4ca1af);
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        input, select, button {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            background: #27ae60;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #219150;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="authPage">
+        <h1>Login</h1>
+        <form onsubmit="login(event)">
+            <input type="email" id="loginEmail" placeholder="Email" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <button onclick="document.getElementById('authPage').style.display = 'none'; document.getElementById('signupPage').style.display = 'block';">Sign Up</button>
+    </div>
+    <div class="container" id="signupPage" style="display: none;">
+        <h2>Sign Up</h2>
+        <form onsubmit="signup(event)">
+            <input type="email" id="signupEmail" placeholder="Email" required>
+            <input type="password" id="signupPassword" placeholder="Password" required>
+            <button type="submit">Sign Up</button>
+        </form>
+        <button onclick="document.getElementById('signupPage').style.display = 'none'; document.getElementById('authPage').style.display = 'block';">Sign In</button>
+    </div>
+    <div class="container" id="homePage" style="display: none;">
+        <h1>Welcome to E-Waste Marketplace</h1>
+        <button onclick="showSellPage()">Sell Your E-Waste</button>
+        <button onclick="showListingsPage()">View Listings</button>
+    </div>
+    <div class="container" id="sellPage" style="display: none;">
+        <h1>Sell Your E-Waste</h1>
+        <form onsubmit="sellProduct(event)">
+            <input type="text" id="sellerName" placeholder="Your Name" required>
+            <input type="email" id="sellerEmail" placeholder="Your Email" required>
+            <input type="text" id="product" placeholder="Product Name" required>
+            <input type="number" id="age" placeholder="Age (years)" required>
+            <input type="text" id="brand" placeholder="Brand" required>
+            <input type="text" id="model" placeholder="Model">
+            <input type="number" id="phone" placeholder="Phone">
+            <button type="submit">Submit</button>
+            <button onclick="goBack()">Go Back</button>
+        </form>
+    </div>
+    <div class="container" id="listingsPage" style="display: none;">
+        <h1>Listings</h1>
+        <div id="listings"></div>
+        <button onclick="goBack()">Go Back</button>
+    </div>
+</body>
+</html>
